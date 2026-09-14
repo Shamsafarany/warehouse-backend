@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('inventories', function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->foreignUlid('product_id')->constrained()->cascadeOnDelete();
-            $table->string('warehouse_location')->default('main_warehouse');
             $table->unsignedInteger('stock_quantity')->default(0);
             $table->unsignedInteger('reserved_quantity')->default(0);
             $table->timestamps();

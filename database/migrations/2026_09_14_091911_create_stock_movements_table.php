@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('stock_movements', function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->foreignUlid('inventory_id')->constrained('inventories')->cascadeOnDelete();
-            $table->foreignUlid('user_id')->nullable()->constrained()->nullOnDelete();
             $table->string('type'); 
             $table->integer('quantity'); 
             $table->string('reference_id')->nullable();
