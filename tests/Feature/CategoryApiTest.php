@@ -1,8 +1,10 @@
 <?php
-
 namespace Tests\Feature;
 
 use App\Domains\Catalog\Infrastructure\Models\Category;
+use App\Domains\Catalog\Infrastructure\Models\Product;
+use App\Domains\Identity\Domain\Enums\UserRole;
+use App\Domains\Identity\Infrastructure\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -14,12 +16,13 @@ class CategoryApiTest extends TestCase
     #[Test]
     public function it_can_list_paginated_categories()
     {
-        Category::create([
+        Category::factory()->create([
             'name' => 'لفائف الصلب',
             'description' => 'وصف تجريبي'
         ]);
 
-        $response = $this->getJson('/api/admin/v1/categories');
+        // If list is public, use /api/v1/categories. If admin-only, add actingAs($admin).
+        $response = $this->getJson('/api/v1/categories');
 
         $response->assertOk()
             ->assertJsonStructure([
@@ -46,8 +49,12 @@ class CategoryApiTest extends TestCase
             'name' => '  <b>لفائف الصلب</b>  ',
             'description' => 'وصف تجريبي للتصنيف'
         ];
+        
+        $admin = User::factory()->create(['role' => UserRole::ADMIN]);
 
-        $response = $this->postJson('/api/admin/v1/categories', $payload);
+        // Fixed: Single request properly authenticated and passing $payload
+        $response = $this->actingAs($admin)
+            ->postJson('/api/v1/admin/categories', $payload);
 
         $response->assertCreated()
             ->assertHeader('X-Warehouse-Domain', 'Catalog')
@@ -67,7 +74,10 @@ class CategoryApiTest extends TestCase
     #[Test]
     public function it_validates_required_fields_on_category_creation()
     {
-        $response = $this->postJson('/api/admin/v1/categories', []);
+        $admin = User::factory()->create(['role' => UserRole::ADMIN]);
+
+        $response = $this->actingAs($admin)
+            ->postJson('/api/v1/admin/categories', []);
 
         $response->assertUnprocessable()
             ->assertJsonValidationErrors(['name'])
@@ -79,12 +89,12 @@ class CategoryApiTest extends TestCase
     #[Test]
     public function it_can_show_a_single_category()
     {
-        $category = Category::create([
+        $category = Category::factory()->create([
             'name' => 'لفائف الصلب',
             'description' => 'وصف تجريبي'
         ]);
 
-        $response = $this->getJson("/api/admin/v1/categories/{$category->id}");
+        $response = $this->getJson("/api/v1/categories/{$category->id}");
 
         $response->assertOk()
             ->assertJson([
@@ -101,7 +111,8 @@ class CategoryApiTest extends TestCase
     #[Test]
     public function it_can_update_an_existing_category()
     {
-        $category = Category::create([
+        $admin = User::factory()->create(['role' => UserRole::ADMIN]);
+        $category = Category::factory()->create([
             'name' => 'لفائف الصلب',
             'description' => 'وصف تجريبي'
         ]);
@@ -111,7 +122,8 @@ class CategoryApiTest extends TestCase
             'description' => 'وصف جديد'
         ];
 
-        $response = $this->putJson("/api/admin/v1/categories/{$category->id}", $payload);
+        $response = $this->actingAs($admin)
+            ->putJson("/api/v1/admin/categories/{$category->id}", $payload);
 
         $response->assertOk()
             ->assertJson([
@@ -130,12 +142,14 @@ class CategoryApiTest extends TestCase
     #[Test]
     public function it_can_delete_a_category()
     {
-        $category = Category::create([
+        $admin = User::factory()->create(['role' => UserRole::ADMIN]);
+        $category = Category::factory()->create([
             'name' => 'لفائف الصلب',
             'description' => 'وصف تجريبي'
         ]);
 
-        $response = $this->deleteJson("/api/admin/v1/categories/{$category->id}");
+        $response = $this->actingAs($admin)
+            ->deleteJson("/api/v1/admin/categories/{$category->id}");
 
         $response->assertOk()
             ->assertJson([
@@ -146,4 +160,49 @@ class CategoryApiTest extends TestCase
 
         $this->assertDatabaseMissing('categories', ['id' => $category->id]);
     }
+
+    #[Test]
+    public function it_cannot_delete_a_category_that_has_products()
+    {
+        $admin = User::factory()->create(['role' => UserRole::ADMIN]);
+        $category = Category::factory()->create([
+            'name' => 'لفائف الصلب',
+            'description' => 'وصف تجريبي'
+        ]);
+
+        Product::factory()->create([
+            'category_id' => $category->id,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->deleteJson("/api/v1/admin/categories/{$category->id}");
+
+        $this->assertDatabaseHas('categories', [
+            'id' => $category->id,
+        ]);
+    }
+
+    #[Test]
+    public function customers_cannot_create_categories()
+    {
+        $customer = User::factory()->create(['role' => UserRole::CUSTOMER]);
+
+        $this->actingAs($customer)
+            ->postJson('/api/v1/admin/categories', [
+                'name' => 'New Electronics'
+            ])
+            ->assertForbidden(); 
+    }
+    
+    #[Test]
+    public function admin_can_create_categories()
+    {
+        $admin = User::factory()->create(['role' => UserRole::ADMIN]);
+
+        $this->actingAs($admin)
+            ->postJson('/api/v1/admin/categories', [
+                'name' => 'New Electronics'
+            ])
+            ->assertCreated();
+    }   
 }

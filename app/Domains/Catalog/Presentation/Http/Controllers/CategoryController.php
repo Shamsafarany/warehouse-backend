@@ -36,17 +36,24 @@ class CategoryController extends Controller
 
     public function store(StoreCategoryRequest $request): JsonResponse
     {
-        $category = $this->categoryService->create($request->validated());
+        try {
+            $category = $this->categoryService->create($request->validated());
 
-        return $this->successResponse(
-            new CategoryResource($category),
-            'تم إنشاء التصنيف بنجاح',
-            Response::HTTP_CREATED,
-            [
-                'X-Warehouse-Domain' => 'Catalog',
-                'Location' => route('categories.show', $category->id),
-            ]
-        );
+            return $this->successResponse(
+                new CategoryResource($category),
+                'تم إنشاء التصنيف بنجاح',
+                Response::HTTP_CREATED,
+                [
+                    'X-Warehouse-Domain' => 'Catalog',
+                    'Location' => route('categories.show', $category->id),
+                ]
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'فشل في إنشاء التصنيف: ' . $e->getMessage(),
+                Response::HTTP_BAD_REQUEST // 400
+            );
+        }
     }
 
     public function show(Category $category): JsonResponse
@@ -59,12 +66,19 @@ class CategoryController extends Controller
 
     public function update(UpdateCategoryRequest $request, Category $category): JsonResponse
     {
-        $updatedCategory = $this->categoryService->update($category, $request->validated());
+        try {
+            $updatedCategory = $this->categoryService->update($category, $request->validated());
 
-        return $this->successResponse(
-            new CategoryResource($updatedCategory),
-            'تم تحديث التصنيف بنجاح'
-        );
+            return $this->successResponse(
+                new CategoryResource($updatedCategory),
+                'تم تحديث التصنيف بنجاح'
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'فشل في تحديث التصنيف: ' . $e->getMessage(),
+                Response::HTTP_BAD_REQUEST // 400
+            );
+        }
     }
 
     public function destroy(Category $category): JsonResponse
