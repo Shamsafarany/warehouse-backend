@@ -30,7 +30,8 @@ class RegisterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'حقل الاسم إجباري.',
+            'first_name.required' => 'حقل الاسم إجباري.',
+            'last_name.required' => 'حقل الاسم إجباري.',
             'email.required' => 'حقل البريد الإلكتروني إجباري.',
             'email.email' => 'صيغة البريد الإلكتروني غير صالحة.',
             'email.unique' => 'البريد الإلكتروني مستخدم مسبقاً.',
