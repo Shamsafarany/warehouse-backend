@@ -12,7 +12,7 @@ class UpdateCategoryAction
     {
         Gate::authorize('update', $category);
         $category->update([
-            'name' => $data['name'],
+            'name' => $data['name']?? null,
             'description' => $data['description'] ?? $category->description,
         ]);
 

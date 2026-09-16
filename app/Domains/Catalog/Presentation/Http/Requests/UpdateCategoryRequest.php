@@ -21,7 +21,7 @@ class UpdateCategoryRequest extends FormRequest
 
         return [
             'name' => [
-                'required',
+                'sometimes',
                 'string',
                 'max:255',
                 Rule::unique('categories', 'name')->ignore($categoryId),
@@ -33,7 +33,6 @@ class UpdateCategoryRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'حقل اسم التصنيف إجباري.',
             'name.string' => 'يجب أن يكون اسم التصنيف نصاً صحيحاً.',
             'name.max' => 'يجب ألا يتجاوز اسم التصنيف 255 حرفاً.',
             'name.unique' => 'اسم التصنيف مستخدم مسبقاً، يرجى اختيار اسم آخر.',

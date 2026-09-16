@@ -123,7 +123,7 @@ class CategoryApiTest extends TestCase
         ];
 
         $response = $this->actingAs($admin)
-            ->putJson("/api/v1/admin/categories/{$category->id}", $payload);
+            ->patchJson("/api/v1/admin/categories/{$category->id}", $payload);
 
         $response->assertOk()
             ->assertJson([

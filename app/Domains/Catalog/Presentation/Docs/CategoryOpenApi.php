@@ -85,10 +85,10 @@ class CategoryOpenApi
             ),
         ]
     )]
-    #[OA\Put(
+   #[OA\Patch(
         path: "/api/v1/admin/categories/{id}",
         tags: ["Catalog - Categories"],
-        summary: "Update a category (Admin Only)",
+        summary: "Partially update a category (Admin Only)",
         security: [["bearerAuth" => []]],
         parameters: [
             new OA\Parameter(
@@ -109,25 +109,10 @@ class CategoryOpenApi
         ),
         responses: [
             new OA\Response(response: 200, description: "Category updated successfully"),
+            new OA\Response(response: 422, description: "Validation error"),
             new OA\Response(response: 401, description: "Unauthenticated"),
             new OA\Response(response: 403, description: "Forbidden - Admin access required"),
-            new OA\Response(response: 404, description: "Category not found"),
-            new OA\Response(
-                response: 422, 
-                description: "Unprocessable Entity - Validation Error",
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: "success", type: "boolean", example: false),
-                        new OA\Property(property: "status_code", type: "integer", example: 422),
-                        new OA\Property(property: "message", type: "string", example: "فشل في التحقق من صحة البيانات المدخلة."),
-                        new OA\Property(
-                            property: "errors",
-                            type: "object",
-                            example: ["name" => ["حقل اسم التصنيف إجباري."]]
-                        )
-                    ]
-                )
-            ),
+            new OA\Response(response: 404, description: "Category not found")
         ]
     )]
     #[OA\Delete(
