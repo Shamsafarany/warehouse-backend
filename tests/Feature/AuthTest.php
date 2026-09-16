@@ -7,6 +7,10 @@ use App\Domains\Identity\Infrastructure\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Auth\Notifications\VerifyEmail;
 
 class AuthTest extends TestCase
 {
@@ -177,7 +181,7 @@ class AuthTest extends TestCase
         ]);
 
         $response = $this->actingAs($user, 'sanctum')
-            ->putJson('/api/v1/auth/password', [
+            ->patchJson('/api/v1/auth/password', [
                 'current_password' => 'oldpassword123',
                 'password' => 'newpassword123',
                 'password_confirmation' => 'newpassword123',
@@ -244,5 +248,195 @@ class AuthTest extends TestCase
         $this->withHeader('Authorization', 'Bearer ' . $newToken)
             ->getJson('/api/v1/auth/me')
             ->assertStatus(200);
+    }
+
+    public function test_user_can_verify_email(): void
+    {
+        $user = User::factory()->create([
+            'email_verified_at' => null,
+        ]);
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            ['id' => $user->id, 'hash' => sha1($user->getEmailForVerification())]
+        );
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson($verificationUrl);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'تم تفعيل البريد الإلكتروني بنجاح',
+            ]);
+        $this->assertTrue($user->fresh()->hasVerifiedEmail());
+    }
+
+    public function test_user_can_request_verification_email(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'email_verified_at' => null,
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/v1/auth/email/verification-notification');
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'تم إرسال رابط التفعيل إلى بريدك الإلكتروني',
+            ]);
+
+        Notification::assertSentTo($user, VerifyEmail::class);
+    }
+
+    public function test_user_can_request_password_reset_link(): void
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+        
+        $user = User::factory()->create();
+
+        $response = $this->postJson('/api/v1/auth/forgot-password', [
+            'email' => $user->email,
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني.',
+            ]);
+    }
+
+    public function test_user_can_reset_password_with_valid_token(): void
+    {
+        $user = User::factory()->create();
+        
+        // Generate a valid password reset token using Laravel's Broker
+        $token = Password::broker()->createToken($user);
+
+        $response = $this->postJson('/api/v1/auth/reset-password', [
+            'token' => $token,
+            'email' => $user->email,
+            'password' => 'NewSecurePassword123!',
+            'password_confirmation' => 'NewSecurePassword123!',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'تم تغيير كلمة المرور بنجاح.',
+            ]);
+    }
+
+    public function test_invalid_login_returns_401(): void
+    {
+        $user = User::factory()->create([
+            'password' => bcrypt('CorrectPassword123!'),
+        ]);
+
+        $response = $this->postJson('/api/v1/auth/login', [
+            'email' => $user->email,
+            'password' => 'WrongPassword999!',
+        ]);
+
+        $response->assertStatus(401)
+            ->assertJson([
+                'success' => false,
+                'status_code' => 401,
+            ]);
+    }
+
+    public function test_unauthenticated_user_accessing_me_returns_401(): void
+    {
+        $response = $this->getJson('/api/v1/auth/me');
+
+        $response->assertStatus(401)
+            ->assertJson([
+                'success' => false,
+                'status_code' => 401,
+            ]);
+    }
+
+    public function test_wrong_current_password_on_password_update_returns_422(): void
+    {
+        $user = User::factory()->create([
+            'password' => bcrypt('OldPassword123!'),
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->patchJson('/api/v1/auth/password', [
+                'current_password' => 'IncorrectOldPass!',
+                'password' => 'NewSecurePassword123!',
+                'password_confirmation' => 'NewSecurePassword123!',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'success' => false,
+                'status_code' => 422,
+            ]);
+    }
+
+    public function test_unverified_user_hitting_verified_route_returns_403(): void
+    {
+        $user = User::factory()->create([
+            'email_verified_at' => null, // Unverified
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->patchJson('/api/v1/auth/profile', [
+                'first_name' => 'Attempted Change',
+            ]);
+
+        $response->assertStatus(403)
+            ->assertJson([
+                'success' => false,
+                'status_code' => 403,
+            ]);
+    }
+
+    public function test_rate_limit_exceeded_returns_429(): void
+    {
+        $user = User::factory()->create();
+
+        // The login route has throttle:5,1
+        // Hit it 6 times in rapid succession
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/v1/auth/login', [
+                'email' => $user->email,
+                'password' => 'WrongPassword',
+            ]);
+        }
+
+        $response = $this->postJson('/api/v1/auth/login', [
+            'email' => $user->email,
+            'password' => 'WrongPassword',
+        ]);
+
+        $response->assertStatus(429)
+            ->assertJson([
+                'success' => false,
+                'status_code' => 429,
+            ]);
+    }
+
+    public function test_invalid_or_expired_reset_token_fails_appropriately(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->postJson('/api/v1/auth/reset-password', [
+            'token' => 'invalid-random-token-string',
+            'email' => $user->email,
+            'password' => 'NewSecurePassword123!',
+            'password_confirmation' => 'NewSecurePassword123!',
+        ]);
+
+        $response->assertStatus(400)
+            ->assertJson([
+                'success' => false,
+                'status_code' => 400,
+            ]);
     }
 }

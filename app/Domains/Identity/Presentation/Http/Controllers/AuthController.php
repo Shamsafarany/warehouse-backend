@@ -16,9 +16,16 @@ use App\Domains\Identity\Application\Actions\UpdateUserPasswordAction;
 use App\Domains\Identity\Application\Actions\UpdateUserProfileAction;
 use App\Domains\Identity\Presentation\Http\Requests\UpdatePasswordRequest;
 use App\Domains\Identity\Presentation\Http\Requests\UpdateProfileRequest;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
+use App\Domains\Identity\Presentation\Http\Requests\ForgotPasswordRequest;
+use App\Domains\Identity\Presentation\Http\Requests\ResetPasswordRequest;
 
 class AuthController extends Controller
 {
@@ -141,15 +148,128 @@ class AuthController extends Controller
 
     public function refresh(Request $request, RefreshTokenAction $action): JsonResponse
     {
-        $newToken = $action->execute($request->user());
+        try {
+            $newToken = $action->execute($request->user());
 
-        return response()->json([
-            'success' => true,
-            'status_code' => 200,
-            'message' => 'تم تجديد الرمز بنجاح',
-            'data' => [
-                'token' => $newToken,
-            ],
-        ], Response::HTTP_OK);
+            return $this->successResponse(
+                [
+                    'token' => $newToken,
+                ],
+                'تم تجديد الرمز بنجاح'
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'فشل في تجديد الرمز: ' . $e->getMessage(),
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+    }
+
+    public function verifyEmail(EmailVerificationRequest $request): JsonResponse
+    {
+        try {
+            if ($request->user()->hasVerifiedEmail()) {
+                return $this->successResponse(
+                    null,
+                    'البريد الإلكتروني مفعل مسبقاً'
+                );
+            }
+
+            $request->fulfill();
+
+            return $this->successResponse(
+                null,
+                'تم تفعيل البريد الإلكتروني بنجاح'
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'فشل في تفعيل البريد الإلكتروني: ' . $e->getMessage(),
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+    }
+
+    public function sendVerificationEmail(Request $request): JsonResponse
+    {
+        try {
+            if ($request->user()->hasVerifiedEmail()) {
+                return $this->errorResponse(
+                    'البريد الإلكتروني مفعل مسبقاً',
+                    Response::HTTP_BAD_REQUEST
+                );
+            }
+
+            $request->user()->sendEmailVerificationNotification();
+
+            return $this->successResponse(
+                null,
+                'تم إرسال رابط التفعيل إلى بريدك الإلكتروني'
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'فشل في إرسال رابط التفعيل: ' . $e->getMessage(),
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
+    {
+        try {
+            // Send the password reset link using Laravel's password broker
+            $status = Password::sendResetLink($request->only('email'));
+
+            if ($status === Password::RESET_LINK_SENT) {
+                return $this->successResponse(
+                    null,
+                    'تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني.'
+                );
+            }
+
+            return $this->errorResponse(
+                'فشل في إرسال رابط استعادة كلمة المرور.',
+                Response::HTTP_BAD_REQUEST
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'حدث خطأ غير متوقع: ' . $e->getMessage(),
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    {
+        try {
+            $status = Password::reset(
+                $request->only('email', 'password', 'password_confirmation', 'token'),
+                function ($user, $password) {
+                    $user->forceFill([
+                        'password' => Hash::make($password)
+                    ])->setRememberToken(Str::random(60));
+                    
+                    $user->save();
+
+                    event(new PasswordReset($user));
+                }
+            );
+
+            if ($status === Password::PASSWORD_RESET) {
+                return $this->successResponse(
+                    null,
+                    'تم تغيير كلمة المرور بنجاح.'
+                );
+            }
+
+            return $this->errorResponse(
+                'رمز استعادة كلمة المرور غير صالح أو منتهي الصلاحية.',
+                Response::HTTP_BAD_REQUEST
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'فشل في تغيير كلمة المرور: ' . $e->getMessage(),
+                Response::HTTP_BAD_REQUEST
+            );
+        }
     }
 }

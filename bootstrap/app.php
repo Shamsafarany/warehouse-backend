@@ -7,9 +7,11 @@ use App\Domains\Catalog\Domain\Exceptions\CategoryHasProductsException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -71,10 +73,36 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
+        // 429 Too Many Requests
+        $exceptions->render(function (ThrottleRequestsException $e, Request $request) {
+            if ($request->is('api/*')) {
+                $retryAfter = $e->getHeaders()['Retry-After'] ?? 60;
+
+                return response()->error(
+                    'لقد تجاوزت الحد المسموح من المحاولات. يرجى المحاولة مرة أخرى لاحقًا.', 
+                    Response::HTTP_TOO_MANY_REQUESTS, 
+                    ['retry_after_seconds' => (int) $retryAfter]
+                );
+            }
+        });
+        //403 Forbidden
+        $exceptions->render(function (AuthorizationException|HttpException $e, Request $request) {
+            if ($request->is('api/*')) {
+                $status = $e instanceof HttpException ? $e->getStatusCode() : Response::HTTP_FORBIDDEN;
+
+                if ($status === Response::HTTP_FORBIDDEN) {
+                    return response()->error('ليس لديك صلاحية للقيام بهذا الإجراء أو أن الحساب غير مفعل.', Response::HTTP_FORBIDDEN);
+                }
+            }
+        });
+
         // 500 Internal Server Error (Production Catch-all)
         $exceptions->render(function (Throwable $e, Request $request) {
             if ($request->is('api/*') && config('app.env') === 'production') {
                 return response()->error('حدث خطأ غير متوقع في الخادم.', Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         });
+
+        
+
     })->create();

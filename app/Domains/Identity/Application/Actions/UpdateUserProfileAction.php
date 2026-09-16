@@ -9,12 +9,8 @@ class UpdateUserProfileAction
     public function execute(User $user, array $data): User
     {
         
-        $user->update(array_filter([
-            'first_name' => $data['first_name'] ?? null,
-            'last_name' => $data['last_name'] ?? null,
-            'email' => $data['email'] ?? null,
-        ]));
+        $user->update($data);
 
-        return $user;
+        return $user->fresh();
     }
 }

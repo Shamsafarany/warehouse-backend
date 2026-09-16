@@ -2,7 +2,7 @@
 
 namespace App\Domains\Identity\Infrastructure\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Domains\Identity\Domain\Enums\UserRole;
 use App\Domains\Cart\Infrastructure\Models\Cart;
@@ -18,7 +18,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 
 #[UseFactory(UserFactory::class)]
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable, HasUlids;
 

@@ -52,7 +52,7 @@ class CategoryOpenApi
         path: "/api/v1/admin/categories",
         tags: ["Catalog - Categories"],
         summary: "Create a new category (Admin Only)",
-        security: [["bearerAuth" => []]],
+        security: [["sanctum" => []]], // Updated from bearerAuth to sanctum
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -85,11 +85,11 @@ class CategoryOpenApi
             ),
         ]
     )]
-   #[OA\Patch(
+    #[OA\Patch(
         path: "/api/v1/admin/categories/{id}",
         tags: ["Catalog - Categories"],
         summary: "Partially update a category (Admin Only)",
-        security: [["bearerAuth" => []]],
+        security: [["sanctum" => []]], // Updated from bearerAuth to sanctum
         parameters: [
             new OA\Parameter(
                 name: "id", 
@@ -119,7 +119,7 @@ class CategoryOpenApi
         path: "/api/v1/admin/categories/{id}",
         tags: ["Catalog - Categories"],
         summary: "Delete a category (Admin Only)",
-        security: [["bearerAuth" => []]],
+        security: [["sanctum" => []]], // Updated from bearerAuth to sanctum
         parameters: [
             new OA\Parameter(
                 name: "id", 
