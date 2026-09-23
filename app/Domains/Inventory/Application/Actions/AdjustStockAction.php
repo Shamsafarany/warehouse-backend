@@ -14,6 +14,7 @@ class AdjustStockAction
         Gate::authorize('update', $inventory);
 
         return DB::transaction(function () use ($inventory, $data) {
+            $inventory = Inventory::where('id', $inventory->id)->lockForUpdate()->firstOrFail();
             $type = $data['type'];
             $quantity = (int) $data['quantity'];
             $currentStock = $inventory->stock_quantity;
@@ -29,12 +30,12 @@ class AdjustStockAction
 
             $inventory->update(['stock_quantity' => $newStock,]);
 
-        $inventory->stockMovements()->create([
-            'type' => $type,
-            'quantity' => $quantity,
-            'notes' => $data['notes'] ?? null,
-            'reference_id' => $data['reference_id'] ?? null,
-        ]);
+            $inventory->stockMovements()->create([
+                'type' => $type,
+                'quantity' => $quantity,
+                'notes' => $data['notes'] ?? null,
+                'reference_id' => $data['reference_id'] ?? null,
+            ]);
 
             return $inventory->fresh(['product', 'stockMovements']);
         });

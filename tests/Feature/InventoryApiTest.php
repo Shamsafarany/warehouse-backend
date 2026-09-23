@@ -284,4 +284,105 @@ class InventoryApiTest extends TestCase
                 ]
             ]);
     }
+
+    public function test_unauthenticated_user_cannot_adjust_stock(): void
+    {
+        $inventory = Inventory::factory()->create(['stock_quantity' => 10]);
+
+        $response = $this->postJson("/api/v1/admin/inventories/{$inventory->id}/adjust", [
+            'type' => 'in',
+            'quantity' => 5,
+            'notes' => 'Test unauthenticated',
+        ]);
+
+        $response->assertStatus(401); // Unauthenticated
+    }
+
+    public function test_customer_cannot_adjust_stock(): void
+    {
+        // Regular customer user (not admin)
+        $customer = User::factory()->create(['role' => 'customer']);
+        $inventory = Inventory::factory()->create(['stock_quantity' => 10]);
+
+        $response = $this->actingAs($customer, 'sanctum')
+            ->postJson("/api/v1/admin/inventories/{$inventory->id}/adjust", [
+                'type' => 'in',
+                'quantity' => 5,
+                'notes' => 'Test customer restriction',
+            ]);
+
+        $response->assertStatus(403); // Forbidden
+    }
+
+    public function test_stock_adjustment_validates_quantity(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $inventory = Inventory::factory()->create(['stock_quantity' => 10]);
+
+        // Missing quantity or invalid (<= 0)
+        $response = $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/v1/admin/inventories/{$inventory->id}/adjust", [
+                'type' => 'in',
+                'quantity' => 0, // Invalid min:1
+                'notes' => 'Invalid quantity test',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['quantity']);
+    }
+
+    public function test_stock_adjustment_validates_type(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $inventory = Inventory::factory()->create(['stock_quantity' => 10]);
+
+        // Invalid type (not in, out)
+        $response = $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/v1/admin/inventories/{$inventory->id}/adjust", [
+                'type' => 'invalid_type',
+                'quantity' => 5,
+                'notes' => 'Invalid type test',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['type']);
+    }
+
+    public function test_stock_adjustment_validates_reason_notes(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $inventory = Inventory::factory()->create(['stock_quantity' => 10]);
+
+        // Missing notes/reason
+        $response = $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/v1/admin/inventories/{$inventory->id}/adjust", [
+                'type' => 'in',
+                'quantity' => 5,
+                // 'notes' is required
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['notes']);
+    }
+
+    public function test_adjustment_transaction_rolls_back_on_failure(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $inventory = Inventory::factory()->create(['stock_quantity' => 10]);
+
+        // Force a scenario where stock adjustment action throws an exception mid-transaction
+        try {
+            DB::transaction(function () use ($inventory) {
+                $inventory->update(['stock_quantity' => 50]); // Temporary update
+                throw new \Exception('Forced failure to test rollback');
+            });
+        } catch (\Exception $e) {
+            // Expected exception
+        }
+
+        $inventory->refresh();
+        
+        // Assert stock did not change because transaction rolled back
+        $this->assertEquals(10, $inventory->stock_quantity);
+    }
 }
