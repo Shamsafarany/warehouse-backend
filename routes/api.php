@@ -1,7 +1,10 @@
 <?php
 
 use App\Domains\Catalog\Presentation\Http\Controllers\CategoryController;
+use App\Domains\Catalog\Presentation\Http\Controllers\ProductController;
 use App\Domains\Identity\Presentation\Http\Controllers\AuthController;
+use App\Domains\Inventory\Presentation\Http\Controllers\InventoryController;
+use App\Domains\Inventory\Presentation\Http\Controllers\StockMovementController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -26,6 +29,8 @@ Route::prefix('v1')->group(function () {
     // ==========================================
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
     Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
+    Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+    Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 
     // ==========================================
     // 3. Authenticated Routes (Sanctum Only)
@@ -55,9 +60,24 @@ Route::prefix('v1')->group(function () {
     // 5. Admin Management Routes (Sanctum + Admin)
     // ==========================================
     Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
+
         Route::post('categories', [CategoryController::class, 'store'])->name('admin.categories.store');
         Route::patch('categories/{category}', [CategoryController::class, 'update'])->name('admin.categories.update');
         Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
+
+        Route::post('products', [ProductController::class, 'store'])->name('admin.products.store');
+        Route::patch('products/{product}', [ProductController::class, 'update'])->name('admin.products.update');
+        Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
+
+        Route::get('/inventories', [InventoryController::class, 'index'])->name('inventories.index');
+        Route::get('/inventories/{inventory}', [InventoryController::class, 'show'])->name('inventories.show');
+        Route::patch('inventories/{inventory}', [InventoryController::class, 'update'])->name('admin.inventories.update');
+        Route::post('inventories/{inventory}/adjust', [InventoryController::class, 'adjust'])
+        ->name('admin.inventories.adjust');
+        
+        Route::get('inventories/{inventory}/movements', [StockMovementController::class, 'index'])
+        ->name('admin.inventories.movements.index');
+        
     });
 
 });
