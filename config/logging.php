@@ -136,9 +136,23 @@ return [
         ],
 
         'auth' => [
-            'driver' => 'single',
+            'driver' => 'daily',
             'path' => storage_path('logs/auth.log'),
             'level' => 'debug',
+            'days' => 30,
+        ],
+
+        'admin' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/admin.log'),
+            'level' => 'info',
+            'days' => 30,
+        ],
+        'domain_errors' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/domain-errors.log'),
+            'level' => 'error',
+            'days' => 14,
         ],
 
     ],

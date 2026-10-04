@@ -1,8 +1,9 @@
 <?php
 
 use App\Providers\AppServiceProvider;
+use App\Providers\ObserverServiceProvider;
 
 return [
     AppServiceProvider::class,
-    App\Domains\Catalog\Infrastructure\Providers\CatalogServiceProvider::class,
+    ObserverServiceProvider::class
 ];
