@@ -10,7 +10,6 @@ class InsufficientStockException extends Exception
 {
     public function __construct(string $message = 'لا يمكن إخراج كمية أكبر من المخزون المتاح.')
     {
-        // Standard Exception constructor: ($message, $code)
         parent::__construct($message, Response::HTTP_CONFLICT);
     }
 

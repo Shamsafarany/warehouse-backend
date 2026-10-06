@@ -4,6 +4,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Domains\Catalog\Domain\Exceptions\CategoryHasProductsException;
+use App\Domains\Inventory\Domain\Exceptions\InsufficientStockException;
+use App\Domains\Inventory\Domain\Exceptions\ProductNotAvailableException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -93,6 +95,20 @@ return Application::configure(basePath: dirname(__DIR__))
                 if ($status === Response::HTTP_FORBIDDEN) {
                     return response()->error('ليس لديك صلاحية للقيام بهذا الإجراء أو أن الحساب غير مفعل.', Response::HTTP_FORBIDDEN);
                 }
+            }
+        });
+
+        // 400 Bad Request (Insufficient Stock)
+        $exceptions->render(function (InsufficientStockException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->error($e->getMessage(), Response::HTTP_BAD_REQUEST);
+            }
+        });
+
+        // 422 Unprocessable Entity (Product Not Available / Inactive)
+        $exceptions->render(function (ProductNotAvailableException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->error($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
             }
         });
 

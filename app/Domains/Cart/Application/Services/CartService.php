@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Domains\Cart\Application\Services;
 
 use App\Domains\Cart\Application\Actions\AddToCartAction;
@@ -6,6 +7,7 @@ use App\Domains\Cart\Application\Actions\ClearCartAction;
 use App\Domains\Cart\Application\Actions\RemoveItemAction;
 use App\Domains\Cart\Application\Actions\UpdateQuantityAction;
 use App\Domains\Cart\Infrastructure\Models\Cart;
+use App\Domains\Identity\Infrastructure\Models\User;
 
 class CartService
 {
@@ -13,31 +15,31 @@ class CartService
         protected AddToCartAction $addToCartAction,
         protected UpdateQuantityAction $updateCartItemAction,
         protected RemoveItemAction $removeCartItemAction,
-        protected ClearCartAction $clearCartAction
+        protected ClearCartAction $emptyCartAction
     ) {}
 
-    public function getCart(int $userId): Cart
+    public function getCart(User $user): Cart
     {
-        return Cart::firstOrCreate(['user_id' => $userId])->load('items.product');
+        return Cart::firstOrCreate(['user_id' => $user->id])->load('items.product');
     }
 
-    public function addItem(int $userId, int $productId, int $quantity): Cart
+    public function addItem(User $user, array $data): Cart
     {
-        return $this->addToCartAction->execute($userId, $productId, $quantity);
+        return $this->addToCartAction->execute($user, $data);
     }
 
-    public function updateItemQuantity(int $userId, string $cartItemId, int $newQuantity): Cart
+    public function updateItemQuantity(User $user, string|int $cartItemId, array $data): Cart
     {
-        return $this->updateCartItemAction->execute($userId, $cartItemId, $newQuantity);
+        return $this->updateCartItemAction->execute($user, $cartItemId, $data);
     }
 
-    public function removeItem(int $userId, string $cartItemId): Cart
+    public function removeItem(User $user, string|int $cartItemId): Cart
     {
-        return $this->removeCartItemAction->execute($userId, $cartItemId);
+        return $this->removeCartItemAction->execute($user, $cartItemId);
     }
 
-    public function clearCart(int $userId) 
+    public function emptyCart(User $user): Cart
     {
-        return $this->clearCartAction->execute($userId);
+        return $this->emptyCartAction->execute($user);
     }
 }

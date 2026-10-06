@@ -3,16 +3,17 @@
 namespace App\Domains\Cart\Application\Actions;
 
 use App\Domains\Cart\Infrastructure\Models\Cart;
+use App\Domains\Identity\Infrastructure\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class ClearCartAction
 {
-    public function execute(int $userId): Cart
+    public function execute(User $user): Cart
     {
-        return DB::transaction(function () use ($userId) {
+        return DB::transaction(function () use ($user) {
             
             //find cart
-            $cart = Cart::where('user_id', $userId)->firstOrFail();
+            $cart = Cart::where('user_id', $user->id)->firstOrFail();
             if (!$cart){
                 return;
             }

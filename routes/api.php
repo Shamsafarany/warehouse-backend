@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Cart\Presentation\Http\Controllers\CartController;
 use App\Domains\Catalog\Presentation\Http\Controllers\CategoryController;
 use App\Domains\Catalog\Presentation\Http\Controllers\ProductController;
 use App\Domains\Identity\Presentation\Http\Controllers\AuthController;
@@ -56,6 +57,7 @@ Route::prefix('v1')->group(function () {
         Route::delete('profile', [AuthController::class, 'destroy'])->name('auth.profile.destroy');
     });
 
+
     // ==========================================
     // 5. Admin Management Routes (Sanctum + Admin)
     // ==========================================
@@ -78,6 +80,16 @@ Route::prefix('v1')->group(function () {
         Route::get('inventories/{inventory}/movements', [StockMovementController::class, 'index'])
         ->name('admin.inventories.movements.index');
         
+    });
+
+
+    //user
+    Route::prefix('cart')->middleware(['auth:sanctum'])->group(function () {
+        Route::get('/', [CartController::class, 'index'])->name('cart.index');
+        Route::post('/', [CartController::class, 'store'])->name('cart.store');
+        Route::patch('/items/{cartItemId}', [CartController::class, 'update'])->name('cart.items.update');
+        Route::delete('/items/{cartItemId}', [CartController::class, 'destroy'])->name('cart.items.destroy');
+        Route::delete('/', [CartController::class, 'empty'])->name('cart.empty');
     });
 
 });

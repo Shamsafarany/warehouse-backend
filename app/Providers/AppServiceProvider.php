@@ -10,7 +10,7 @@ use App\Domains\Catalog\Policies\CategoryPolicy;
 use App\Domains\Catalog\Policies\ProductPolicy;
 use App\Domains\Inventory\Infrastructure\Models\Inventory;
 use App\Domains\Inventory\Policies\InventoryPolicy;
-use Illuminate\Auth\Access\Gate;
+use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Http\Resources\Json\JsonResource;

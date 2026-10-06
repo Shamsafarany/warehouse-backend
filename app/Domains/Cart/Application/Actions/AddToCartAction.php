@@ -3,34 +3,42 @@
 namespace App\Domains\Cart\Application\Actions;
 
 use App\Domains\Cart\Infrastructure\Models\Cart;
+use App\Domains\Catalog\Infrastructure\Models\Product;
 use App\Domains\Inventory\Infrastructure\Models\Inventory;
 use App\Domains\Inventory\Domain\Exceptions\InsufficientStockException;
+use App\Domains\Identity\Infrastructure\Models\User;
+use App\Domains\Inventory\Domain\Exceptions\ProductNotAvailableException;
+use Exception;
 use Illuminate\Support\Facades\DB;
 
 class AddToCartAction
 {
-    public function execute(int $userId, int $productId, int $quantity): Cart
+    public function execute(User $user, array $data): Cart
     {
-        return DB::transaction(function () use ($userId, $productId, $quantity) {
-            
-            //get - create cart
-            $cart = Cart::firstOrCreate(['user_id' => $userId]);
+        $productId = $data['product_id'];
+        $quantity = $data['quantity'];
 
-            //find cart item
+        $product = Product::findOrFail($productId);
+
+        if (!$product->is_active) {
+            throw new ProductNotAvailableException('المنتج غير فعال ولا يمكن إضافته إلى السلة.');
+        }
+
+        return DB::transaction(function () use ($user, $productId, $quantity) {
+            
+            $cart = Cart::firstOrCreate(['user_id' => $user->id]);
+
             $cartItem = $cart->items()->where('product_id', $productId)->first();
 
             $existingQuantity = $cartItem ? $cartItem->quantity : 0;
             $totalRequestedQuantity = $existingQuantity + $quantity;
 
-            //lock inventory
             $inventory = Inventory::where('product_id', $productId)->lockForUpdate()->firstOrFail();
 
-            //check stock
             if ($inventory->stock_quantity < $totalRequestedQuantity) {
                 throw new InsufficientStockException('The requested quantity exceeds available stock.');
             }
 
-            //create - update cart item
             if ($cartItem) {
                 $cartItem->update(['quantity' => $totalRequestedQuantity]);
             } else {
