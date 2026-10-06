@@ -2,6 +2,15 @@
 
 namespace App\Providers;
 
+use App\Domains\Cart\Infrastructure\Models\Cart;
+use App\Domains\Cart\Policies\CartPolicy;
+use App\Domains\Catalog\Infrastructure\Models\Category;
+use App\Domains\Catalog\Infrastructure\Models\Product;
+use App\Domains\Catalog\Policies\CategoryPolicy;
+use App\Domains\Catalog\Policies\ProductPolicy;
+use App\Domains\Inventory\Infrastructure\Models\Inventory;
+use App\Domains\Inventory\Policies\InventoryPolicy;
+use Illuminate\Auth\Access\Gate;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -20,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
+    public function boot(Gate $gate): void
     {
         Response::macro('success', function (
             mixed $data, 
@@ -67,5 +76,9 @@ class AppServiceProvider extends ServiceProvider
 
             return response()->json($response, $status);
         });
+        $gate->policy(Cart::class, CartPolicy::class);
+        $gate->policy(Inventory::class, InventoryPolicy::class);
+        $gate->policy(Category::class, CategoryPolicy::class);
+        $gate->policy(Product::class, ProductPolicy::class);
     }
 }
