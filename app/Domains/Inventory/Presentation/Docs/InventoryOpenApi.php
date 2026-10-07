@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domains\Catalog\Presentation\Docs;
+namespace App\Domains\Inventory\Presentation\Docs;
 
 use OpenApi\Attributes as OA;
 
