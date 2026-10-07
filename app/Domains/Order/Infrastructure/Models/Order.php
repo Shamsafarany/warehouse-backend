@@ -3,6 +3,7 @@
 namespace App\Domains\Order\Infrastructure\Models;
 
 use App\Domains\Identity\Infrastructure\Models\User;
+use App\Domains\Order\Domain\Enums\OrderStatus;
 use App\Domains\Payment\Infrastructure\Models\Payment;
 use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 #[UseFactory(OrderFactory::class)]
 class Order extends Model
@@ -30,6 +31,7 @@ class Order extends Model
     protected function casts(): array
     {
         return [
+            'status' => OrderStatus::class,
             'total_amount' => 'decimal:2',
             'shipping_address' => 'array',
             'billing_address' => 'array',
