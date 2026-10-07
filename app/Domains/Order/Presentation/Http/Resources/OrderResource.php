@@ -13,7 +13,7 @@ class OrderResource extends JsonResource
         return [
             'type' => 'order',
             'id' => $this->id,
-            'status' => $this->status instanceof \UnitEnum ? $this->status->value : $this->status,
+            'status' => $this->status?->value,
             'total_amount' => $this->total_amount,
             'shipping_address' => $this->shipping_address,
             'items' => OrderItemsResource::collection($this->whenLoaded('items')),

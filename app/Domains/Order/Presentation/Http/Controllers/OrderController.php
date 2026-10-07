@@ -15,6 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
+use OrderCollection;
 
 class OrderController
 {
@@ -24,19 +25,25 @@ class OrderController
         protected PlaceOrderAction $placeOrderAction
     ) {}
 
-    public function index(Request $request): JsonResponse
+    public function orderHistory(Request $request): JsonResponse
     {
         Gate::authorize('viewAny', Order::class);
+
+        $perPage = min(
+            (int) $request->input('per_page', 15),
+            100
+        );
+
 
         $orders = $request->user()
             ->orders()
             ->with('items.product')
             ->latest()
-            ->paginate(15);
+            ->paginate($perPage);
 
         return $this->successResponse(
-            OrderResource::collection($orders),
-            'تم استرجاع قائمة الطلبات بنجاح'
+            new OrderCollection($orders),
+            'تم استرجاع سجل الطلبات بنجاح'
         );
     }
 

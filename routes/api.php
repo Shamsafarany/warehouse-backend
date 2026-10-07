@@ -97,7 +97,7 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::middleware(['auth:sanctum'])->group(function() {
-        Route::get('orders', [OrderController::class, 'index'])->name('order.index');
+        Route::get('orders/history', [OrderController::class, 'orderHistory'])->name('orders.history');
         Route::post('orders', [OrderController::class, 'store'])->name('order.store'); 
         Route::get('orders/{order}', [OrderController::class, 'show'])->name('order.show');
         Route::patch('orders/{order}/cancel', [OrderController::class, 'cancel'])->name('order.cancel');

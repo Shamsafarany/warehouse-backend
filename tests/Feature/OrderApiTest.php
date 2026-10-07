@@ -242,7 +242,7 @@ class OrderApiTest extends TestCase
         $response = $this->actingAs($user, 'sanctum')
             ->postJson('/api/v1/orders');
 
-        $response->assertStatus(422);
+        $response->assertStatus(409);
 
         // Verify atomicity: stock is untouched and no order was created
         $this->assertEquals(1, $inventory->fresh()->stock_quantity);

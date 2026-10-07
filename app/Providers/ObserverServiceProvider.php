@@ -12,6 +12,8 @@ use App\Domains\Inventory\Infrastructure\Models\Inventory;
 use App\Domains\Inventory\Infrastructure\Models\StockMovement;
 use App\Domains\Inventory\Infrastructure\Observers\InventoryObserver;
 use App\Domains\Inventory\Infrastructure\Observers\StockMovementObserver;
+use App\Domains\Order\Infrastructure\Models\Order;
+use App\Domains\Order\Infrastructure\Observers\OrderObserver;
 use Illuminate\Support\ServiceProvider;
 
 
@@ -31,5 +33,6 @@ class ObserverServiceProvider extends ServiceProvider
         Product::observe(ProductObserver::class);
         Inventory::observe(InventoryObserver::class);
         StockMovement::observe(StockMovementObserver::class);
+        Order::observe(OrderObserver::class);
     }
 }
