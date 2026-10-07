@@ -10,6 +10,7 @@ use App\Domains\Identity\Infrastructure\Models\User;
 use App\Domains\Inventory\Domain\Exceptions\ProductNotAvailableException;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AddToCartAction
 {
@@ -47,6 +48,7 @@ class AddToCartAction
                     'quantity' => $quantity,
                 ]);
             }
+            
 
             return $cart->fresh(['items.product']);
         });

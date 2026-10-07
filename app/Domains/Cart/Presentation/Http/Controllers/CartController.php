@@ -22,20 +22,16 @@ class CartController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        try {
-            $cart = $this->cartService->getCart($request->user());
+        $cart = $this->cartService->getCart(
+            $request->user()
+        );
 
-            return $this->successResponse(
-                new CartResource($cart),
-                'تم استرجاع السلة بنجاح'
-            );
-        } catch (\Exception $e) {
-            return $this->errorResponse(
-                'فشل في استرجاع السلة: ' . $e->getMessage(),
-                Response::HTTP_INTERNAL_SERVER_ERROR
-            );
-        }
+        return $this->successResponse(
+            new CartResource($cart),
+            'تم استرجاع السلة بنجاح'
+        );
     }
+
 
 public function store(AddToCartRequest $request): JsonResponse
     {
@@ -53,7 +49,6 @@ public function store(AddToCartRequest $request): JsonResponse
 
     public function update(UpdateQuantityRequest $request, string $cartItemId): JsonResponse
     {
-        // ModelNotFoundException will naturally bubble up to a 404 response
         $cart = $this->cartService->updateItemQuantity(
             user: $request->user(),
             cartItemId: $cartItemId,
@@ -68,7 +63,6 @@ public function store(AddToCartRequest $request): JsonResponse
 
     public function destroy(Request $request, string $cartItemId): JsonResponse
     {
-        // ModelNotFoundException will naturally bubble up to a 404 response if item doesn't belong to user's cart
         $cart = $this->cartService->removeItem(
             user: $request->user(),
             cartItemId: $cartItemId
@@ -82,18 +76,13 @@ public function store(AddToCartRequest $request): JsonResponse
 
     public function empty(Request $request): JsonResponse
     {
-        try {
-            $cart = $this->cartService->emptyCart($request->user());
+        $cart = $this->cartService->emptyCart(
+            $request->user()
+        );
 
-            return $this->successResponse(
-                new CartResource($cart),
-                'تم إفراغ السلة بنجاح'
-            );
-        } catch (\Exception $e) {
-            return $this->errorResponse(
-                'فشل في إفراغ السلة: ' . $e->getMessage(),
-                Response::HTTP_BAD_REQUEST
-            );
-        }
+        return $this->successResponse(
+            new CartResource($cart),
+            'تم إفراغ السلة بنجاح'
+        );
     }
 }

@@ -148,6 +148,12 @@ return [
             'level' => 'info',
             'days' => 30,
         ],
+        'customer' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/customer.log'),
+            'level' => 'info',
+            'days' => 30,
+        ],
         'domain_errors' => [
             'driver' => 'daily',
             'path' => storage_path('logs/domain-errors.log'),

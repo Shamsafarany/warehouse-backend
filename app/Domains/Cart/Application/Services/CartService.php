@@ -8,6 +8,7 @@ use App\Domains\Cart\Application\Actions\RemoveItemAction;
 use App\Domains\Cart\Application\Actions\UpdateQuantityAction;
 use App\Domains\Cart\Infrastructure\Models\Cart;
 use App\Domains\Identity\Infrastructure\Models\User;
+use Illuminate\Support\Facades\Gate;
 
 class CartService
 {
@@ -20,6 +21,7 @@ class CartService
 
     public function getCart(User $user): Cart
     {
+        Gate::authorize('view', [Cart::class, $user]);
         return Cart::firstOrCreate(['user_id' => $user->id])->load('items.product');
     }
 

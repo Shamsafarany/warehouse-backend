@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use App\Domains\Catalog\Domain\Exceptions\CategoryHasProductsException;
 use App\Domains\Inventory\Domain\Exceptions\InsufficientStockException;
 use App\Domains\Inventory\Domain\Exceptions\ProductNotAvailableException;
+use App\Domains\Order\Domain\Exceptions\EmptyCartException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -107,6 +108,13 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // 422 Unprocessable Entity (Product Not Available / Inactive)
         $exceptions->render(function (ProductNotAvailableException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->error($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        });
+
+        // 422 Unprocessable Entity (Empty Cart)
+        $exceptions->render(function (EmptyCartException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->error($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
             }

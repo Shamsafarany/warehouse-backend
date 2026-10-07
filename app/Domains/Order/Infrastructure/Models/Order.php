@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[UseFactory(OrderFactory::class)]
 class Order extends Model
 {
-    use HasUlids, SoftDeletes,  HasFactory;
+    use HasUlids, HasFactory;
 
     protected $fillable = [
         'user_id',

@@ -19,7 +19,6 @@ return new class extends Migration
             $table->json('shipping_address')->nullable();
             $table->json('billing_address')->nullable();
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
