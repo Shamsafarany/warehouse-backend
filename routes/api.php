@@ -29,10 +29,10 @@ Route::prefix('v1')->group(function () {
     // ==========================================
     // 2. Public Catalog Routes
     // ==========================================
-    Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
-    Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
-    Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-    Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+    Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::get('categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
+    Route::get('products', [ProductController::class, 'index'])->name('products.index');
+    Route::get('products/{product}', [ProductController::class, 'show'])->name('products.show');
 
     // ==========================================
     // 3. Authenticated Routes (Sanctum Only)
@@ -72,8 +72,8 @@ Route::prefix('v1')->group(function () {
         Route::patch('products/{product}', [ProductController::class, 'update'])->name('admin.products.update');
         Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
 
-        Route::get('/inventories', [InventoryController::class, 'index'])->name('inventories.index');
-        Route::get('/inventories/{inventory}', [InventoryController::class, 'show'])->name('inventories.show');
+        Route::get('inventories', [InventoryController::class, 'index'])->name('inventories.index');
+        Route::get('inventories/{inventory}', [InventoryController::class, 'show'])->name('inventories.show');
         Route::patch('inventories/{inventory}', [InventoryController::class, 'update'])->name('admin.inventories.update');
         Route::post('inventories/{inventory}/adjust', [InventoryController::class, 'adjust'])
         ->name('admin.inventories.adjust');
@@ -81,7 +81,8 @@ Route::prefix('v1')->group(function () {
         Route::get('inventories/{inventory}/movements', [StockMovementController::class, 'index'])
         ->name('admin.inventories.movements.index');
 
-        Route::get('/orders', [OrderController::class, 'adminIndex']);
+        Route::get('orders', [OrderController::class, 'adminIndex'])->name('admin.orders.index');
+        Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.order.change-status');
         
     });
 
@@ -96,9 +97,10 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::middleware(['auth:sanctum'])->group(function() {
-        Route::get('/orders', [OrderController::class, 'index']);
-        Route::post('/orders', [OrderController::class, 'store']); 
-        Route::get('/orders/{order}', [OrderController::class, 'show']);
+        Route::get('orders', [OrderController::class, 'index'])->name('order.index');
+        Route::post('orders', [OrderController::class, 'store'])->name('order.store'); 
+        Route::get('orders/{order}', [OrderController::class, 'show'])->name('order.show');
+        Route::patch('orders/{order}/cancel', [OrderController::class, 'cancel'])->name('order.cancel');
     });
 
 
