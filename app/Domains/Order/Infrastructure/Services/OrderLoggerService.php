@@ -1,5 +1,5 @@
 <?php
-namespace App\Domains\Order\Application\Services;
+namespace App\Domains\Order\Infrastructure\Services;
 
 use App\Domains\Order\Infrastructure\Models\Order;
 use Illuminate\Support\Facades\Log;

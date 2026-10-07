@@ -25,7 +25,7 @@ class OrderFactory extends Factory
 
         return [
             'user_id' => User::factory(),
-            'status' => fake()->randomElement(['pending', 'processing', 'completed']),
+            'status' => \App\Domains\Order\Domain\Enums\OrderStatus::PENDING->value,
             'total_amount' => 0.00,
             'shipping_address' => $address,
             'billing_address' => $address,

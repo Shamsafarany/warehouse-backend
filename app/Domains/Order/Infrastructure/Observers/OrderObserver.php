@@ -2,8 +2,8 @@
 
 namespace App\Domains\Order\Infrastructure\Observers;
 
-use App\Domains\Order\Application\Services\OrderLoggerService;
 use App\Domains\Order\Infrastructure\Models\Order;
+use App\Domains\Order\Infrastructure\Services\OrderLoggerService;
 
 class OrderObserver
 {

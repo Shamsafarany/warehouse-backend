@@ -11,11 +11,12 @@ use App\Domains\Order\Presentation\Http\Requests\ChangeStatusRequest;
 use App\Domains\order\Presentation\Http\Requests\PlaceOrderRequest;
 use App\Domains\Order\Presentation\Http\Resources\OrderResource;
 use App\Http\Controllers\Concerns\ApiResponse as ConcernsApiResponse;
+use App\Domains\Order\Presentation\Http\Resources\OrderCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
-use OrderCollection;
+
 
 class OrderController
 {
