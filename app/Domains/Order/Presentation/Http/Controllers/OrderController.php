@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Domains\Order\Presentation\Controllers;
+namespace App\Domains\Order\Presentation\Http\Controllers;
 
 use App\Domains\Order\Application\Actions\CancelOrderAction;
 use App\Domains\Order\Application\Actions\ChangeOrderStatusAction;
 use App\Domains\Order\Application\Actions\PlaceOrderAction;
 use App\Domains\Order\Domain\Enums\OrderStatus;
 use App\Domains\Order\Infrastructure\Models\Order;
-use App\Domains\Order\Presentation\Requests\ChangeStatusRequest;
-use App\Domains\Order\Presentation\Requests\PlaceOrderRequest;
-use App\Domains\Order\Presentation\Resources\OrderResource;
+use App\Domains\Order\Presentation\Http\Requests\ChangeStatusRequest;
+use App\Domains\order\Presentation\Http\Requests\PlaceOrderRequest;
+use App\Domains\Order\Presentation\Http\Resources\OrderResource;
 use App\Http\Controllers\Concerns\ApiResponse as ConcernsApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

@@ -1,5 +1,5 @@
 <?php
-namespace App\Domains\Order\Presentation\Policies;
+namespace App\Domains\Order\Policies;
 
 use App\Domains\Identity\Infrastructure\Models\User;
 use App\Domains\Order\Domain\Enums\OrderStatus;
@@ -7,19 +7,19 @@ use App\Domains\Order\Infrastructure\Models\Order;
 
 class OrderPolicy
 {
-    public function viewAny(User $user): bool
-    {
-        return true;
-    }
-
     public function viewAnyAdmin(User $user): bool
     {
-        return $user->is_admin ?? false;
+        return $user->role === 'admin';
+    }
+
+    public function updateStatus(User $user, Order $order): bool
+    {
+        return $user->role === 'admin';
     }
 
     public function view(User $user, Order $order): bool
     {
-        return ($user->is_admin ?? false)
+        return $user->role === 'admin'
             || $user->id === $order->user_id;
     }
 
@@ -28,13 +28,9 @@ class OrderPolicy
         return true;
     }
 
-    public function updateStatus(User $user, Order $order): bool
-    {
-        return $user->is_admin ?? false;
-    }
-
     public function cancel(User $user, Order $order): bool
     {
-        return $user->id === $order->user_id && $order->status === OrderStatus::PENDING;
+        return $user->role === 'admin'
+            || $user->id === $order->user_id;
     }
 }

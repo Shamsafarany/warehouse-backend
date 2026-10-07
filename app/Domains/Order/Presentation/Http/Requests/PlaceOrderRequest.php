@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domains\order\Presentation\Requests;
+namespace App\Domains\order\Presentation\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 class PlaceOrderRequest extends FormRequest

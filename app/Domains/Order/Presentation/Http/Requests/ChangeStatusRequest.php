@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domains\Order\Presentation\Requests;
+namespace App\Domains\Order\Presentation\Http\Requests;
 
 use App\Domains\Order\Domain\Enums\OrderStatus;
 use Illuminate\Foundation\Http\FormRequest;

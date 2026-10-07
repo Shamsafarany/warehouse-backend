@@ -21,8 +21,13 @@ class CartService
 
     public function getCart(User $user): Cart
     {
-        Gate::authorize('view', [Cart::class, $user]);
-        return Cart::firstOrCreate(['user_id' => $user->id])->load('items.product');
+        $cart = Cart::firstOrCreate([
+            'user_id' => $user->id,
+        ]);
+
+        Gate::authorize('view', $cart);
+
+        return $cart->load('items.product');
     }
 
     public function addItem(User $user, array $data): Cart

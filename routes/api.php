@@ -6,7 +6,7 @@ use App\Domains\Catalog\Presentation\Http\Controllers\ProductController;
 use App\Domains\Identity\Presentation\Http\Controllers\AuthController;
 use App\Domains\Inventory\Presentation\Http\Controllers\InventoryController;
 use App\Domains\Inventory\Presentation\Http\Controllers\StockMovementController;
-use App\Domains\Order\Presentation\Controllers\OrderController;
+use App\Domains\Order\Presentation\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {

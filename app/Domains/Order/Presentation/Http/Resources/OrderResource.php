@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Domains\Order\Presentation\Resources;
+namespace App\Domains\Order\Presentation\Http\Resources;
 
-use App\Domains\Order\Presentation\Resources\OrderItemsResource;
+use App\Domains\Order\Presentation\Http\Resources\OrderItemsResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
