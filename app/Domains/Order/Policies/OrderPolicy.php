@@ -1,43 +1,40 @@
 <?php
-
-namespace App\Domains\Order\Policies;
+namespace App\Domains\Order\Presentation\Policies;
 
 use App\Domains\Identity\Infrastructure\Models\User;
 use App\Domains\Order\Infrastructure\Models\Order;
 
 class OrderPolicy
 {
-    /**
-     * Determine whether the user can view any orders.
-     */
     public function viewAny(User $user): bool
     {
-        return true; // Users can view their own order history list
+        return true;
     }
 
-    /**
-     * Determine whether the user can view the specific order.
-     */
+    public function viewAnyAdmin(User $user): bool
+    {
+        return $user->is_admin ?? false;
+    }
+
     public function view(User $user, Order $order): bool
     {
-        // IDOR Prevention: Ensure the order belongs to the authenticated user
-        return $user->id === $order->user_id;
+        return ($user->is_admin ?? false)
+            || $user->id === $order->user_id;
     }
 
-    /**
-     * Determine whether the user can create/place an order.
-     */
     public function create(User $user): bool
     {
-        return true; // Any authenticated user can place an order
+        return true;
     }
 
-    /**
-     * Determine whether the user can update or cancel the order.
-     */
-    public function update(User $user, Order $order): bool
+    public function updateStatus(User $user, Order $order): bool
     {
-        // Users can only modify/cancel pending orders that belong to them
-        return $user->id === $order->user_id && $order->status === 'pending';
+        return $user->is_admin ?? false;
+    }
+
+    public function cancel(User $user, Order $order): bool
+    {
+        return ($user->is_admin ?? false)
+            || $user->id === $order->user_id;
     }
 }

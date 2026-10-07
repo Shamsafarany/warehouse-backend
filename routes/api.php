@@ -6,6 +6,7 @@ use App\Domains\Catalog\Presentation\Http\Controllers\ProductController;
 use App\Domains\Identity\Presentation\Http\Controllers\AuthController;
 use App\Domains\Inventory\Presentation\Http\Controllers\InventoryController;
 use App\Domains\Inventory\Presentation\Http\Controllers\StockMovementController;
+use App\Domains\Order\Presentation\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -79,6 +80,8 @@ Route::prefix('v1')->group(function () {
         
         Route::get('inventories/{inventory}/movements', [StockMovementController::class, 'index'])
         ->name('admin.inventories.movements.index');
+
+        Route::get('/orders', [OrderController::class, 'adminIndex']);
         
     });
 
@@ -91,5 +94,12 @@ Route::prefix('v1')->group(function () {
         Route::delete('/items/{cartItemId}', [CartController::class, 'destroy'])->name('cart.items.destroy');
         Route::delete('/', [CartController::class, 'empty'])->name('cart.empty');
     });
+
+    Route::middleware(['auth:sanctum'])->group(function() {
+        Route::get('/orders', [OrderController::class, 'index']);
+        Route::post('/orders', [OrderController::class, 'store']); 
+        Route::get('/orders/{order}', [OrderController::class, 'show']);
+    });
+
 
 });
